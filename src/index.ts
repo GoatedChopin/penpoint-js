@@ -1,6 +1,6 @@
 /**
  * Penpoint JavaScript/TypeScript Client Library
- * 
+ *
  * Official client library for the Penpoint API
  */
 

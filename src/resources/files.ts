@@ -20,11 +20,11 @@ export class FilesResource {
    */
   async list(params?: PaginationParams): Promise<FileList> {
     const query: Record<string, string | number> = {};
-    
+
     if (params?.limit !== undefined) {
       query.limit = params.limit;
     }
-    
+
     if (params?.offset !== undefined) {
       query.offset = params.offset;
     }
@@ -36,21 +36,28 @@ export class FilesResource {
   /**
    * Upload a file to the API
    */
+  /**
+   * Upload a file to the API
+   */
   async upload(request: FileUploadRequest): Promise<File> {
     if (!request.filename) {
       throw new PenpointValidationError('Filename is required');
     }
 
     const formData = new FormData();
-    
+
     if (request.file instanceof File) {
       formData.append('file', request.file);
     } else if (request.file instanceof Buffer) {
-      const blob = new Blob([request.file]);
+      // A Buffer is a Uint8Array, which is a valid BlobPart.
+      // Pass it directly to the Blob constructor.
+      const blob = new Blob([new Uint8Array(request.file)]);
       formData.append('file', blob, request.filename);
     } else if (typeof request.file === 'string') {
       // Assume it's a file path or URL
-      throw new PenpointValidationError('File upload from string path is not supported in browser environment');
+      throw new PenpointValidationError(
+        'File upload from string path is not supported in browser environment'
+      );
     } else {
       throw new PenpointValidationError('Invalid file type');
     }
@@ -79,10 +86,14 @@ export class FilesResource {
       body.expirationDate = request.expirationDate;
     }
 
-    const response = await this.client.put<File>(`/files/${fileId}`, JSON.stringify(body), {
-      headers: { 'Content-Type': 'application/json' },
-    });
-    
+    const response = await this.client.put<File>(
+      `/files/${fileId}`,
+      JSON.stringify(body),
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
     return response.data;
   }
 

@@ -29,7 +29,10 @@ export class HttpClient {
   ): Promise<Response> {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), options.timeout || this.defaultTimeout);
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        options.timeout || this.defaultTimeout
+      );
 
       const response = await fetch(url, {
         ...options,
@@ -43,7 +46,10 @@ export class HttpClient {
       }
 
       // Retry on 5xx errors or network failures
-      if ((response.status >= 500 || response.status === 0) && retryCount < this.maxRetries) {
+      if (
+        (response.status >= 500 || response.status === 0) &&
+        retryCount < this.maxRetries
+      ) {
         const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff
         await new Promise(resolve => setTimeout(resolve, delay));
         return this.fetchWithRetry(url, options, retryCount + 1);
@@ -52,7 +58,9 @@ export class HttpClient {
       return response;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error(`Request timeout after ${options.timeout || this.defaultTimeout}ms`);
+        throw new Error(
+          `Request timeout after ${options.timeout || this.defaultTimeout}ms`
+        );
       }
 
       if (retryCount < this.maxRetries) {
@@ -74,7 +82,7 @@ export class HttpClient {
     } = {}
   ): Promise<ApiResponse<T>> {
     const url = new URL(endpoint, this.baseUrl);
-    
+
     // Add query parameters
     if (options.query) {
       Object.entries(options.query).forEach(([key, value]) => {
@@ -101,14 +109,15 @@ export class HttpClient {
       let errorData: unknown;
 
       try {
-        const errorResponse = await response.json();
-        errorMessage = errorResponse.message || errorMessage;
-        errorData = errorResponse;
+        const errorResponse = (await response.json()) as ApiError;
+        errorMessage = String(errorResponse?.message || errorMessage);
+        errorData = errorResponse as unknown;
       } catch {
         // If we can't parse the error response, use the default message
       }
 
       const error: ApiError = {
+        name: 'ApiError',
         message: errorMessage,
         status: response.status,
         response: errorData,
@@ -119,7 +128,7 @@ export class HttpClient {
 
     let data: T;
     try {
-      data = await response.json();
+      data = (await response.json()) as T;
     } catch {
       // If response is not JSON, try to get text
       const text = await response.text();
@@ -139,19 +148,43 @@ export class HttpClient {
     };
   }
 
-  async get<T>(endpoint: string, options?: RequestOptions & { query?: Record<string, string | number | boolean> }): Promise<ApiResponse<T>> {
+  async get<T>(
+    endpoint: string,
+    options?: RequestOptions & {
+      query?: Record<string, string | number | boolean>;
+    }
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { ...options, method: 'GET' });
   }
 
-  async post<T>(endpoint: string, body?: BodyInit, options?: RequestOptions): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { ...options, method: 'POST', body: body || null });
+  async post<T>(
+    endpoint: string,
+    body?: BodyInit,
+    options?: RequestOptions
+  ): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'POST',
+      body: body || null,
+    });
   }
 
-  async put<T>(endpoint: string, body?: BodyInit, options?: RequestOptions): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { ...options, method: 'PUT', body: body || null });
+  async put<T>(
+    endpoint: string,
+    body?: BodyInit,
+    options?: RequestOptions
+  ): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'PUT',
+      body: body || null,
+    });
   }
 
-  async delete<T>(endpoint: string, options?: RequestOptions): Promise<ApiResponse<T>> {
+  async delete<T>(
+    endpoint: string,
+    options?: RequestOptions
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
   }
 }

@@ -28,8 +28,13 @@ export class PenpointClient {
       'User-Agent': userAgent,
     };
 
-    this.httpClient = new HttpClient(baseUrl, defaultHeaders, timeout, maxRetries);
-    
+    this.httpClient = new HttpClient(
+      baseUrl,
+      defaultHeaders,
+      timeout,
+      maxRetries
+    );
+
     this.files = new FilesResource(this.httpClient);
     this.discreteReferences = new DiscreteReferencesResource(this.httpClient);
   }

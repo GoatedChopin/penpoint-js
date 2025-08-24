@@ -91,7 +91,7 @@ export interface ApiResponse<T = unknown> {
   headers: Record<string, string>;
 }
 
-export interface ApiError {
+export interface ApiError extends Error {
   message: string;
   status?: number;
   response?: unknown;
@@ -106,7 +106,7 @@ export class PenpointError extends Error {
 
 export class PenpointApiError extends PenpointError {
   public readonly status: number | undefined;
-  public readonly response: unknown | undefined;
+  public readonly response: unknown;
 
   constructor(message: string, status?: number, response?: unknown) {
     super(message);
